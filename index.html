@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Live Translation — demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @font-face {
+    font-family: 'SF Pro Display';
+    src: url('https://applesocial.s3.amazonaws.com/assets/styles/fonts/sf-pro-display/v3/sf-pro-display_regular.woff2') format('woff2');
+  }
+  body { font-family: 'SF Pro Display', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+  .small-muted { font-size: 13px; color: #6b7280; }
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-6">
+
+
+  <div class="text-center mb-6">
+    <h1 class="text-3xl font-bold">Live Translation Generator</h1>
+    <p style="color: #86868B; font-size: 1.5rem; margin-top: 0.5rem;">
+      Create Live Translation images. Tell the world what the real meaning is. Download, share, have fun!
+    </p>
+  </div>
+
+  
+  <div class="relative bg-white shadow rounded-xl mb-4">
+    <canvas id="previewCanvas" width="987" height="720" class="rounded-xl block"></canvas>
+  </div>
+
+  
+  <div class="text-center mb-6">
+    <h1 class="text-3xl font-bold mb-2">Customize Your Message</h1>
+    <p style="color: #86868B; font-size: 1.5rem; margin-top: 0.25rem;">
+      Add your text and watch it transform in real-time
+    </p>
+  </div>
+
+  
+  <div class="grid grid-cols-2 gap-6 w-[950px] mb-6">
+    <div>
+      <label class="block font-semibold mb-1">Left Text</label>
+      <textarea id="leftText" rows="4" class="w-full border rounded p-2" placeholder="Text 1"></textarea>
+      <p class="small-muted mt-1">Appears in bold black text</p>
+    </div>
+    <div>
+      <label class="block font-semibold mb-1">Right Text</label>
+      <textarea id="rightText" rows="4" class="w-full border rounded p-2" placeholder="Text 2"></textarea>
+      <p class="small-muted mt-1">Appears in purple-to-pink gradient</p>
+    </div>
+  </div>
+
+<div class="flex flex-col items-center mt-4 w-full">
+  
+  <button id="downloadBtn" class="px-6 py-2 bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition rounded-full">
+    Download Your Live Translation
+  </button>
+
+  
+  <p class="text-xs mt-2 text-center" style="color: #86868B; max-width: 500px;">
+    In case this is not abundantly clear: This site is not affiliated with Apple Inc. It's created for fun and to spread joy in life. 😊
+  </p>
+</div>
+<script>
+
+const canvas = document.getElementById('previewCanvas');
+const ctx = canvas.getContext('2d');
+
+const leftTextEl = document.getElementById('leftText');
+const rightTextEl = document.getElementById('rightText');
+const downloadBtn = document.getElementById('downloadBtn');
+
+
+const earbudLeft = 317;
+const earbudRight = 678;
+
+
+const sideMargin = 20;
+const earGap = 20;
+
+
+const baseImage = new Image();
+baseImage.crossOrigin = "anonymous"; 
+baseImage.src = 'def.png'; 
+baseImage.onload = () => draw(); 
+
+
+function wrapTextToLines(text, maxWidth) {
+  if (!text) return [];
+  const words = text.split(/\s+/);
+  const lines = [];
+  let line = '';
+
+  words.forEach(word => {
+    const testLine = line ? line + ' ' + word : word;
+    if (ctx.measureText(testLine).width <= maxWidth) {
+      line = testLine;
+    } else {
+      if (line) lines.push(line);
+      line = word;
+    }
+  });
+
+  if (line) lines.push(line);
+  return lines;
+}
+
+function renderTextInBox(text, boxX, boxY, boxWidth, boxHeight, initialFont=48, colorOrGradient='black') {
+  if (!text) return;
+  const minFont = 10;
+  let fontSize = initialFont;
+  const lineHeightFactor = 1.1;
+  let lines = [];
+
+  
+  while (fontSize >= minFont) {
+    ctx.font = `bold ${fontSize}px 'SF Pro Display'`;
+    lines = wrapTextToLines(text, boxWidth);
+    const lineHeight = fontSize * lineHeightFactor;
+    const totalHeight = lines.length * lineHeight;
+    let maxLineWidth = 0;
+    lines.forEach(line => {
+      const w = ctx.measureText(line).width;
+      if (w > maxLineWidth) maxLineWidth = w;
+    });
+    if (totalHeight <= boxHeight && maxLineWidth <= boxWidth) break;
+    fontSize -= 1;
+  }
+
+  
+  ctx.font = `bold ${fontSize}px 'SF Pro Display'`;
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'center';
+  if (typeof colorOrGradient === 'function') {
+    ctx.fillStyle = colorOrGradient(boxX, boxWidth);
+  } else {
+    ctx.fillStyle = colorOrGradient;
+  }
+
+  const lineHeight = fontSize * lineHeightFactor;
+  const startY = boxY + (boxHeight - lines.length * lineHeight) / 2;
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], boxX + boxWidth/2, startY + i*lineHeight, boxWidth);
+  }
+}
+
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (baseImage.complete && baseImage.naturalWidth !== 0) {
+    ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+  }
+
+  ctx.fillStyle = 'black';
+  ctx.font = "600 22px 'SF Pro Display'";
+  ctx.textAlign = 'center';
+  ctx.fillText('', canvas.width / 2, 28);
+
+  const leftBoxX = sideMargin;
+  const leftBoxWidth = earbudLeft - earGap - sideMargin;
+  const rightBoxX = earbudRight + earGap;
+  const rightBoxWidth = canvas.width - sideMargin - rightBoxX;
+  const boxY = 140;
+  const boxHeight = 420;
+
+  renderTextInBox(leftTextEl.value || 'Text 1', leftBoxX, boxY, leftBoxWidth, boxHeight, 56, 'black');
+
+  const gradientCreator = (boxX, boxW) => {
+    const g = ctx.createLinearGradient(boxX, 0, boxX + boxW, 0);
+    g.addColorStop(0, '#a855f7');
+    g.addColorStop(1, '#ec4899');
+    return g;
+  };
+  renderTextInBox(rightTextEl.value || 'Text 2', rightBoxX, boxY, rightBoxWidth, boxHeight, 56, gradientCreator);
+}
+
+
+leftTextEl.addEventListener('input', draw);
+rightTextEl.addEventListener('input', draw);
+
+
+downloadBtn.addEventListener('click', () => {
+  try {
+    const url = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'live-translation.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (err) {
+    console.error(err);
+    alert('Ошибка при экспорте картинки. Используйте локальный сервер (Live Server).');
+  }
+});
+</script>
+</body>
+</html>
