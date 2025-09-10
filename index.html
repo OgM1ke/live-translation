@@ -97,9 +97,15 @@ const earGap = 20;
 
 
 const baseImage = new Image();
-baseImage.crossOrigin = "anonymous"; 
-baseImage.src = 'def.png'; 
-baseImage.onload = () => draw(); 
+baseImage.crossOrigin = "anonymous";
+baseImage.src = 'def.png';
+
+baseImage.onload = () => {
+  document.fonts.load("48px 'SF Pro Display'").then(() => {
+    draw(); 
+  });
+};
+
 
 
 function wrapTextToLines(text, maxWidth) {
