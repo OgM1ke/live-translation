@@ -1,336 +1,353 @@
-<!DOCTYPE html>
-<html lang="ru">
+<!doctype html>
+<html lang="en">
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Live Translation — demo</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  @font-face {
-    font-family: 'SF Pro Display';
-    src: url('./SFProText-Regular.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
+  body { font-family: -apple-system, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+  .download-gradient {
+    background: linear-gradient(90deg,
+      #0a0762 0%, #080d8f 12.5%, #2919db 25%, #6d22bd 37.5%, #8a2cc8 50%,
+      #c037c3 62.5%, #ef2db0 75%, #eb277d 87.5%, #fa1c65 100%);
+    color: #fff; font-weight: 600;
   }
-
-  @font-face {
-    font-family: 'SF Pro Display';
-    src: url('./SFProText-Bold.woff2') format('woff2');
-    font-weight: bold;
-    font-style: normal;
-  }
-
-  body {
-    font-family: 'SF Pro Display', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-weight: normal;
-  }
-
-  h1 {
-    font-weight: bold;
-  }
-
-  .file-info {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-    color: #555;
-    margin-top: 4px;
-  }
-
-  .file-remove {
-    cursor: pointer;
-    font-weight: bold;
-    color: #c00;
-  }
+  .file-info { display:inline-flex; align-items:center; gap:8px; font-size:0.9rem; color:#555; margin-left:12px; }
+  .file-remove { cursor:pointer; font-weight:700; padding:2px 6px; border-radius:6px; }
+  .small-muted { color:#86868B; font-size:1rem; margin-top:0.25rem; }
+  .download-row { display:flex; justify-content:space-between; gap:12px; margin-top:12px; }
+  .add-pic-btn { border-radius:9999px; font-weight:700; }
+  #debugOverlay { position:fixed; left:8px; bottom:8px; background:rgba(255,255,255,0.95); color:#111; border:1px solid #ddd; padding:8px 10px; border-radius:6px; font-size:12px; max-width:320px; z-index:9999; display:none; box-shadow:0 6px 18px rgba(0,0,0,0.08); }
 </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col items-center p-6">
 
-  <div class="text-center mb-6">
-    <h1 class="text-3xl font-bold">Live Translation Generator</h1>
-    <p style="color: #86868B; font-size: 1.5rem; margin-top: 0.5rem;">
-      Create Live Translation images. Tell the world what the real meaning is. Download, share, have fun!
-    </p>
-  </div>
+<div class="text-center mb-6">
+  <h1 class="text-3xl font-bold">Live Translation Generator</h1>
+  <p class="small-muted" style="font-size:1.25rem; margin-top:0.5rem;">
+    Create Live Translation images. Tell the world what the real meaning is. Download, share, have fun!
+  </p>
+</div>
 
-  <div class="relative bg-white shadow rounded-xl mb-4">
-    <canvas id="previewCanvas" width="987" height="720" class="rounded-xl block"></canvas>
-  </div>
+<!-- Canvas wrapper -->
+<div class="relative bg-white shadow rounded-xl mb-4 w-full max-w-[987px]">
+  <canvas id="previewCanvas" width="987" height="720" class="rounded-xl block w-full h-auto"></canvas>
+</div>
 
-  <div class="text-center mb-6">
-    <h1 class="text-3xl font-bold mb-2">Customize Your Message</h1>
-    <p style="color: #86868B; font-size: 1.5rem; margin-top: 0.25rem;">
-      Add your text and watch it transform in real-time
-    </p>
-  </div>
+<div class="text-center mb-6">
+  <h1 class="text-3xl font-bold mb-2">Customize Your Message</h1>
+  <p class="small-muted" style="font-size:1.25rem; margin-top:0.25rem;">
+    Add your text and watch it transform in real-time
+  </p>
+</div>
+<!-- Two-column text inputs -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-[950px] mb-6">
+  <!-- Left -->
+  <div>
+    <label class="block font-semibold mb-1">Left Text</label>
+    <textarea id="leftText" rows="4" class="w-full border rounded p-2" placeholder="Text 1"></textarea>
+    <p class="small-muted mt-1">Appears in gradient gray → black</p>
 
-  <div class="grid grid-cols-2 gap-6 w-[950px] mb-6">
-  
-    <div>
-      <label class="block font-semibold mb-1">Left Text</label>
-      <textarea id="leftText" rows="4" class="w-full border rounded p-2" placeholder="Text 1"></textarea>
-      <p class="small-muted mt-1">Appears in gradient gray to black</p>
-
-      <div class="mt-2">
-        <input type="file" id="fileLeft" accept="image/png, image/jpeg" class="hidden">
-        <button id="btnLeft" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-full shadow hover:bg-blue-700 transition">
-          Add picture
-        </button>
-        <div id="fileInfoLeft" class="file-info hidden"></div>
-        <label class="flex items-center gap-2 mt-2 text-sm text-gray-600">
-          <input type="checkbox" id="onlyPic1">
-          Use only picture
-        </label>
-      </div>
-    </div>
-
-    
-    <div>
-      <label class="block font-semibold mb-1">Right Text</label>
-      <textarea id="rightText" rows="4" class="w-full border rounded p-2" placeholder="Text 2"></textarea>
-      <p class="small-muted mt-1">Appears in purple-to-pink gradient</p>
-
-      <div class="mt-2">
-        <input type="file" id="fileRight" accept="image/png, image/jpeg" class="hidden">
-        <button id="btnRight" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-full shadow hover:bg-blue-700 transition">
-          Add picture
-        </button>
-        <div id="fileInfoRight" class="file-info hidden"></div>
-        <label class="flex items-center gap-2 mt-2 text-sm text-gray-600">
-          <input type="checkbox" id="onlyPic2">
-          Use only picture
-        </label>
-      </div>
+    <div class="mt-2">
+      <input type="file" id="fileLeft" accept="image/png,image/jpeg" class="hidden">
+      <button id="btnLeft" class="px-4 py-2 bg-blue-600 text-white add-pic-btn hover:bg-blue-700 transition">Add picture</button>
+      <div id="fileInfoLeft" class="file-info" style="display:none;"></div>
+      <label class="flex items-center gap-2 mt-2 text-sm text-gray-600">
+        <input type="checkbox" id="onlyPic1"> Use only picture
+      </label>
     </div>
   </div>
 
-  <div class="flex flex-col items-center mt-4 w-full">
-    <button id="downloadBtn" class="px-6 py-2 bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition rounded-full">
-      Download Your Live Translation
-    </button>
+  <!-- Right -->
+  <div>
+    <label class="block font-semibold mb-1">Right Text</label>
+    <textarea id="rightText" rows="4" class="w-full border rounded p-2" placeholder="Text 2"></textarea>
+    <p class="small-muted mt-1">Appears in purple-to-pink gradient</p>
 
-    <p class="text-xs mt-2 text-center" style="color: #86868B; max-width: 500px;">
-      In case this is not abundantly clear: This site is not affiliated with Apple Inc. It's created for fun and to spread joy in life. 😊
-    </p>
+    <div class="mt-2">
+      <input type="file" id="fileRight" accept="image/png,image/jpeg" class="hidden">
+      <button id="btnRight" class="px-4 py-2 bg-blue-600 text-white add-pic-btn hover:bg-blue-700 transition">Add picture</button>
+      <div id="fileInfoRight" class="file-info" style="display:none;"></div>
+      <label class="flex items-center gap-2 mt-2 text-sm text-gray-600">
+        <input type="checkbox" id="onlyPic2"> Use only picture
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- Download method header -->
+<div class="text-center mb-4 w-full max-w-[950px]">
+  <h2 class="text-3xl font-bold">Choose Download Method</h2>
+</div>
+
+<!-- Download buttons row -->
+<!-- Download buttons row -->
+<div class="download-row w-full max-w-[950px] flex flex-col md:flex-row justify-between gap-4">
+  <div style="display:flex; flex-direction:column; align-items:flex-start;">
+    <button id="downloadWeb" class="px-6 py-2 download-gradient rounded-full">Download Your Live Translation (Web)</button>
+    <div class="small-muted" style="margin-top:8px;">(Your image will be saved to your device)</div>
   </div>
 
+  <div style="display:flex; flex-direction:column; align-items:flex-end;">
+    <button id="downloadTG" class="px-6 py-2 download-gradient rounded-full">Download Your Live Translation (TG)</button>
+    <div class="small-muted" style="margin-top:8px; text-align:right;">
+      (Will open a new tab with the image)
+    </div>
+  </div>
+</div>
+
+
+<div style="height:20px;"></div>
+
+<div style="width:950px; text-align:center;">
+  <p class="text-xs small-muted text-center" style="max-width:900px; margin:12px auto; white-space: pre-line;">
+This site is not affiliated with Apple Inc.
+It's created for fun and to spread joy in life. 😊
+  </p>
+</div>
+
+<div id="debugOverlay"></div>
 <script>
-const canvas = document.getElementById('previewCanvas');
-const ctx = canvas.getContext('2d');
+document.addEventListener('DOMContentLoaded', function () {
+  'use strict';
 
-const leftTextEl = document.getElementById('leftText');
-const rightTextEl = document.getElementById('rightText');
-const downloadBtn = document.getElementById('downloadBtn');
+  const canvas = document.getElementById('previewCanvas');
+  const ctx = canvas.getContext('2d');
 
-const fileLeft = document.getElementById('fileLeft');
-const fileRight = document.getElementById('fileRight');
-const btnLeft = document.getElementById('btnLeft');
-const btnRight = document.getElementById('btnRight');
-const fileInfoLeft = document.getElementById('fileInfoLeft');
-const fileInfoRight = document.getElementById('fileInfoRight');
+  const leftTextEl = document.getElementById('leftText');
+  const rightTextEl = document.getElementById('rightText');
 
-const onlyPic1 = document.getElementById('onlyPic1');
-const onlyPic2 = document.getElementById('onlyPic2');
+  const fileLeft = document.getElementById('fileLeft');
+  const fileRight = document.getElementById('fileRight');
+  const btnLeft = document.getElementById('btnLeft');
+  const btnRight = document.getElementById('btnRight');
+  const fileInfoLeft = document.getElementById('fileInfoLeft');
+  const fileInfoRight = document.getElementById('fileInfoRight');
 
-const earbudLeft = 317;
-const earbudRight = 678;
-const sideMargin = 20;
-const earGap = 20;
-const boxY = 140;
-const boxHeight = 420;
-const imgBoxWidth = 281;
-const imgBoxHeight = 273;
+  const onlyPic1 = document.getElementById('onlyPic1');
+  const onlyPic2 = document.getElementById('onlyPic2');
 
-let imgLeft = null;
-let imgRight = null;
+  const downloadWebBtn = document.getElementById('downloadWeb');
+  const downloadTGBtn = document.getElementById('downloadTG');
 
-const baseImage = new Image();
-baseImage.crossOrigin = "anonymous";
-baseImage.src = 'def.png';
-baseImage.onload = () => {
-  document.fonts.load("48px 'SF Pro Display'").then(() => draw());
-};
-
-function wrapTextToLines(text, maxWidth) {
-  if (!text) return [];
-  const words = text.split(/\s+/);
-  const lines = [];
-  let line = '';
-
-  words.forEach(word => {
-    const testLine = line ? line + ' ' + word : word;
-    if (ctx.measureText(testLine).width <= maxWidth) {
-      line = testLine;
-    } else {
-      if (line) lines.push(line);
-      line = word;
+  const debugOverlay = document.getElementById('debugOverlay');
+  function debug(msg, show=true) {
+    console.log(msg);
+    if (show) {
+      debugOverlay.style.display = 'block';
+      debugOverlay.textContent = String(msg).slice(0, 400);
+      setTimeout(() => debugOverlay.style.display = 'none', 3500);
     }
-  });
+  }
 
-  if (line) lines.push(line);
-  return lines;
-}
+  // --- layout params ---
+  const earbudLeft = 317;
+  const earbudRight = 678;
+  const sideMargin = 20;
+  const earGap = 20;
+  const boxY = 140;
+  const boxHeight = 420;
+  const imgBoxWidth = 281;
+  const imgBoxHeight = 273;
 
-function renderTextInBox(text, boxX, boxY, boxWidth, boxHeight, initialFont=48, colorOrGradient='black') {
-  if (!text) return;
-  const minFont = 10;
-  let fontSize = initialFont;
-  const lineHeightFactor = 1.1;
-  let lines = [];
+  // --- state ---
+  let imgLeft = null, imgRight = null;
+  let imgLeftURL = null, imgRightURL = null;
 
-  while (fontSize >= minFont) {
-    ctx.font = `bold ${fontSize}px -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`;
-    lines = wrapTextToLines(text, boxWidth);
+  const baseImage = new Image();
+  baseImage.crossOrigin = 'anonymous';
+  baseImage.src = 'def.png';
+  baseImage.onload = safeDraw;
+  baseImage.onerror = safeDraw;
+
+  // --- helpers ---
+  function wrapTextToLines(text, maxWidth) {
+    if (!text) return [];
+    const words = text.split(/\s+/);
+    const lines = [];
+    let line = '';
+    for (let w of words) {
+      const test = line ? (line + ' ' + w) : w;
+      if (ctx.measureText(test).width <= maxWidth) line = test;
+      else { if (line) lines.push(line); line = w; }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  function renderTextInBox(text, boxX, boxY, boxWidth, boxHeight, initialFont = 48, colorOrGradient = 'black') {
+    if (!text) return;
+    const minFont = 10;
+    let fontSize = initialFont;
+    const lineHeightFactor = 1.1;
+    let lines = [];
+
+    while (fontSize >= minFont) {
+      ctx.font = `bold ${fontSize}px -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
+      lines = wrapTextToLines(text, boxWidth);
+      const lineHeight = fontSize * lineHeightFactor;
+      const totalH = lines.length * lineHeight;
+      let maxW = 0;
+      for (let l of lines) maxW = Math.max(maxW, ctx.measureText(l).width);
+      if (totalH <= boxHeight && maxW <= boxWidth) break;
+      fontSize -= 1;
+    }
+
+    ctx.font = `bold ${fontSize}px -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = typeof colorOrGradient === 'function' ? colorOrGradient(boxX, boxWidth) : colorOrGradient;
+
     const lineHeight = fontSize * lineHeightFactor;
-    const totalHeight = lines.length * lineHeight;
-    let maxLineWidth = 0;
-    lines.forEach(line => {
-      const w = ctx.measureText(line).width;
-      if (w > maxLineWidth) maxLineWidth = w;
-    });
-    if (totalHeight <= boxHeight && maxLineWidth <= boxWidth) break;
-    fontSize -= 1;
+    const startY = boxY + (boxHeight - lines.length * lineHeight) / 2;
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], boxX + boxWidth / 2, startY + i * lineHeight, boxWidth);
+    }
   }
 
-  ctx.font = `bold ${fontSize}px -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`;
-  ctx.textBaseline = 'top';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = typeof colorOrGradient === 'function'
-    ? colorOrGradient(boxX, boxWidth)
-    : colorOrGradient;
-
-  const lineHeight = fontSize * lineHeightFactor;
-  const startY = boxY + (boxHeight - lines.length * lineHeight) / 2;
-  for (let i = 0; i < lines.length; i++) {
-    ctx.fillText(lines[i], boxX + boxWidth/2, startY + i*lineHeight, boxWidth);
-  }
-}
-
-function drawImageContain(img, x, y, w, h) {
-  const iw = img.width;
-  const ih = img.height;
-  const scale = Math.min(w / iw, h / ih);
-  const nw = iw * scale;
-  const nh = ih * scale;
-  const dx = x + (w - nw) / 2;
-  const dy = y + (h - nh) / 2;
-  ctx.drawImage(img, dx, dy, nw, nh);
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  if (baseImage.complete && baseImage.naturalWidth !== 0) {
-    ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
-  }
-
-  const leftBoxX = sideMargin;
-  const leftBoxWidth = earbudLeft - earGap - sideMargin;
-  const rightBoxX = earbudRight + earGap;
-  const rightBoxWidth = canvas.width - sideMargin - rightBoxX;
-
-  const leftGradientCreator = (boxX, boxW) => {
+  function leftGradientCreator(boxX, boxW) {
     const g = ctx.createLinearGradient(boxX, 0, boxX + boxW, 0);
     g.addColorStop(0, '#d4d4d4');
     g.addColorStop(1, '#282828');
     return g;
-  };
-
-  const rightGradientCreator = (boxX, boxW) => {
+  }
+  function rightGradientCreator(boxX, boxW) {
     const g = ctx.createLinearGradient(boxX, 0, boxX + boxW, 0);
-    g.addColorStop(0.0, '#0a0762');
-    g.addColorStop(0.125, '#080d8f');
-    g.addColorStop(0.25, '#2919db');
-    g.addColorStop(0.375, '#6d22bd');
-    g.addColorStop(0.5, '#8a2cc8');
-    g.addColorStop(0.625, '#c037c3');
-    g.addColorStop(0.75, '#ef2db0');
-    g.addColorStop(0.875, '#eb277d');
+    g.addColorStop(0.0, '#0a0762'); g.addColorStop(0.125, '#080d8f');
+    g.addColorStop(0.25, '#2919db'); g.addColorStop(0.375, '#6d22bd');
+    g.addColorStop(0.5, '#8a2cc8'); g.addColorStop(0.625, '#c037c3');
+    g.addColorStop(0.75, '#ef2db0'); g.addColorStop(0.875, '#eb277d');
     g.addColorStop(1.0, '#fa1c65');
     return g;
-  };
+  }
 
-  
-  if (imgLeft) {
-    drawImageContain(imgLeft, leftBoxX, boxY, imgBoxWidth, imgBoxHeight);
-    if (!onlyPic1.checked) {
-      renderTextInBox(leftTextEl.value || 'Text 1',
-        leftBoxX, boxY + imgBoxHeight + 10,
-        leftBoxWidth, boxHeight - imgBoxHeight - 10,
-        40, leftGradientCreator);
+  function drawImageContain(img, x, y, w, h) {
+    if (!img) return;
+    const iw = img.naturalWidth || img.width;
+    const ih = img.naturalHeight || img.height;
+    const scale = Math.min(w / iw, h / ih);
+    const nw = iw * scale;
+    const nh = ih * scale;
+    const dx = x + (w - nw) / 2;
+    const dy = y + (h - nh) / 2;
+    ctx.drawImage(img, dx, dy, nw, nh);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (baseImage.complete && baseImage.naturalWidth) {
+      try { ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height); } catch (e) {}
     }
-  } else {
-    renderTextInBox(leftTextEl.value || 'Text 1',
-      leftBoxX, boxY, leftBoxWidth, boxHeight,
-      56, leftGradientCreator);
+
+    const leftBoxX = sideMargin;
+    const leftBoxWidth = earbudLeft - earGap - sideMargin;
+    const rightBoxX = earbudRight + earGap;
+    const rightBoxWidth = canvas.width - sideMargin - rightBoxX;
+
+    if (imgLeft) {
+      drawImageContain(imgLeft, leftBoxX, boxY, imgBoxWidth, imgBoxHeight);
+      if (!onlyPic1.checked) renderTextInBox(leftTextEl.value || 'Text 1', leftBoxX, boxY + imgBoxHeight + 10, leftBoxWidth, boxHeight - imgBoxHeight - 10, 40, leftGradientCreator);
+    } else renderTextInBox(leftTextEl.value || 'Text 1', leftBoxX, boxY, leftBoxWidth, boxHeight, 56, leftGradientCreator);
+
+    if (imgRight) {
+      drawImageContain(imgRight, rightBoxX, boxY, imgBoxWidth, imgBoxHeight);
+      if (!onlyPic2.checked) renderTextInBox(rightTextEl.value || 'Text 2', rightBoxX, boxY + imgBoxHeight + 10, rightBoxWidth, boxHeight - imgBoxHeight - 10, 40, rightGradientCreator);
+    } else renderTextInBox(rightTextEl.value || 'Text 2', rightBoxX, boxY, rightBoxWidth, boxHeight, 56, rightGradientCreator);
   }
 
-  if (imgRight) {
-    drawImageContain(imgRight, rightBoxX, boxY, imgBoxWidth, imgBoxHeight);
-    if (!onlyPic2.checked) {
-      renderTextInBox(rightTextEl.value || 'Text 2',
-        rightBoxX, boxY + imgBoxHeight + 10,
-        rightBoxWidth, boxHeight - imgBoxHeight - 10,
-        40, rightGradientCreator);
-    }
-  } else {
-    renderTextInBox(rightTextEl.value || 'Text 2',
-      rightBoxX, boxY, rightBoxWidth, boxHeight,
-      56, rightGradientCreator);
+  function safeDraw() { try { draw(); } catch (err) { debug('Draw error: ' + (err?.message||String(err)), true); } }
+
+  // --- file handling ---
+  function handleFileInput(fileInput, side) {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    if (!(/image\/(png|jpe?g)/i).test(file.type)) { alert('Only PNG or JPG/JPEG allowed'); fileInput.value = ''; return; }
+    const objectURL = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = function () {
+      if (side === 'left') { if (imgLeftURL) URL.revokeObjectURL(imgLeftURL); imgLeft = img; imgLeftURL = objectURL; showFileInfo('left', file.name); }
+      else { if (imgRightURL) URL.revokeObjectURL(imgRightURL); imgRight = img; imgRightURL = objectURL; showFileInfo('right', file.name); }
+      safeDraw();
+    };
+    img.onerror = function () { URL.revokeObjectURL(objectURL); alert('Image loading error'); fileInput.value = ''; safeDraw(); };
+    img.src = objectURL;
   }
-}
 
-function handleFile(input, side) {
-  const file = input.files[0];
-  if (!file) return;
-  const img = new Image();
-  img.onload = () => {
-    if (side === 'left') imgLeft = img;
-    if (side === 'right') imgRight = img;
-    updateFileInfo(side, file.name);
-    draw();
-  };
-  img.src = URL.createObjectURL(file);
-}
-
-function updateFileInfo(side, name) {
-  const infoEl = side === 'left' ? fileInfoLeft : fileInfoRight;
-  infoEl.innerHTML = `${name} <span class="file-remove">✕</span>`;
-  infoEl.classList.remove('hidden');
-
-  infoEl.querySelector('.file-remove').onclick = () => {
-    if (side === 'left') imgLeft = null;
-    if (side === 'right') imgRight = null;
-    infoEl.classList.add('hidden');
-    draw();
-  };
-}
-
-btnLeft.addEventListener('click', () => fileLeft.click());
-btnRight.addEventListener('click', () => fileRight.click());
-fileLeft.addEventListener('change', () => handleFile(fileLeft, 'left'));
-fileRight.addEventListener('change', () => handleFile(fileRight, 'right'));
-
-
-[leftTextEl, rightTextEl, onlyPic1, onlyPic2].forEach(el =>
-  el.addEventListener('input', draw)
-);
-
-downloadBtn.addEventListener('click', () => {
-  try {
-    const url = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'live-translation.png';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  } catch (err) {
-    console.error(err);
-    alert('Ошибка при экспорте картинки. Используйте локальный сервер (Live Server).');
+  function showFileInfo(side, name) {
+    const infoEl = side === 'left' ? fileInfoLeft : fileInfoRight;
+    infoEl.innerHTML = '';
+    const span = document.createElement('span'); span.textContent = name; span.title = name;
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'file-remove'; btn.innerText = '✕'; btn.title = 'Remove';
+    btn.addEventListener('click', () => removeImage(side));
+    infoEl.appendChild(span); infoEl.appendChild(btn); infoEl.style.display = '';
   }
+
+  function removeImage(side) {
+    if (side === 'left') { if (imgLeftURL) URL.revokeObjectURL(imgLeftURL); imgLeftURL = null; imgLeft = null; fileInfoLeft.style.display = 'none'; fileLeft.value = ''; }
+    else { if (imgRightURL) URL.revokeObjectURL(imgRightURL); imgRightURL = null; imgRight = null; fileInfoRight.style.display = 'none'; fileRight.value = ''; }
+    safeDraw();
+  }
+
+  btnLeft.addEventListener('click', () => fileLeft.click());
+  btnRight.addEventListener('click', () => fileRight.click());
+  fileLeft.addEventListener('change', () => handleFileInput(fileLeft, 'left'));
+  fileRight.addEventListener('change', () => handleFileInput(fileRight, 'right'));
+  leftTextEl.addEventListener('input', safeDraw);
+  rightTextEl.addEventListener('input', safeDraw);
+  onlyPic1.addEventListener('change', safeDraw);
+  onlyPic2.addEventListener('change', safeDraw);
+
+  // --- download functions ---
+  function downloadWebImage() {
+    if (!canvas) return;
+    canvas.toBlob(function (blob) {
+      if (!blob) { alert('Failed to generate image'); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'live-translation.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }, 'image/png');
+  }
+
+  function openForTelegram() {
+    try {
+      const dataURL = canvas.toDataURL('image/png');
+      const newWindow = window.open('', '_blank');
+      if (!newWindow) { alert('Popup blocked — allow popups'); return; }
+      newWindow.document.body.innerHTML = '';
+      newWindow.document.title = 'Live Translation Image';
+      const style = newWindow.document.createElement('style');
+      style.textContent = `
+        body { display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:-apple-system, system-ui, sans-serif; padding:20px; background:#f9f9f9; }
+        img { max-width:100%; height:auto; border:1px solid #ddd; border-radius:12px; margin-bottom:16px; }
+        .instructions { font-size:14px; color:#555; text-align:center; max-width:300px; }
+      `;
+      newWindow.document.head.appendChild(style);
+      const img = newWindow.document.createElement('img');
+      img.src = dataURL;
+      img.alt = 'Live Translation Image';
+      newWindow.document.body.appendChild(img);
+      const div = newWindow.document.createElement('div');
+      div.className = 'instructions';
+      div.textContent = 'Long-press (tap & hold) on the image to save it to your device.';
+      newWindow.document.body.appendChild(div);
+      newWindow.focus();
+    } catch (err) { debug('openForTelegram error: ' + (err?.message || String(err)), true); alert('Cannot open image — try in system browser.'); }
+  }
+
+  // --- attach download events ---
+  downloadWebBtn.addEventListener('click', downloadWebImage);
+  downloadTGBtn.addEventListener('click', openForTelegram);
+
+  safeDraw();
 });
 </script>
 </body>
