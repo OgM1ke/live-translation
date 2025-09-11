@@ -6,32 +6,45 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   @font-face {
-  font-family: 'SF Pro Display';
-  src: url('./SFProText-Regular.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-}
+    font-family: 'SF Pro Display';
+    src: url('./SFProText-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+  }
 
-@font-face {
-  font-family: 'SF Pro Display';
-  src: url('./SFProText-Bold.woff2') format('woff2');
-  font-weight: bold;
-  font-style: normal;
-}
+  @font-face {
+    font-family: 'SF Pro Display';
+    src: url('./SFProText-Bold.woff2') format('woff2');
+    font-weight: bold;
+    font-style: normal;
+  }
 
- body {
-  font-family: 'SF Pro Display', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-weight: normal;
-}
+  body {
+    font-family: 'SF Pro Display', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: normal;
+  }
 
-h1 {
-  font-weight: bold; 
-}
+  h1 {
+    font-weight: bold;
+  }
 
+  .file-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #555;
+    margin-top: 4px;
+  }
+
+  .file-remove {
+    cursor: pointer;
+    font-weight: bold;
+    color: #c00;
+  }
 </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col items-center p-6">
-
 
   <div class="text-center mb-6">
     <h1 class="text-3xl font-bold">Live Translation Generator</h1>
@@ -40,12 +53,10 @@ h1 {
     </p>
   </div>
 
-  
   <div class="relative bg-white shadow rounded-xl mb-4">
     <canvas id="previewCanvas" width="987" height="720" class="rounded-xl block"></canvas>
   </div>
 
-  
   <div class="text-center mb-6">
     <h1 class="text-3xl font-bold mb-2">Customize Your Message</h1>
     <p style="color: #86868B; font-size: 1.5rem; margin-top: 0.25rem;">
@@ -53,33 +64,57 @@ h1 {
     </p>
   </div>
 
-  
   <div class="grid grid-cols-2 gap-6 w-[950px] mb-6">
+  
     <div>
       <label class="block font-semibold mb-1">Left Text</label>
       <textarea id="leftText" rows="4" class="w-full border rounded p-2" placeholder="Text 1"></textarea>
-      <p class="small-muted mt-1">Appears in bold black text</p>
+      <p class="small-muted mt-1">Appears in gradient gray to black</p>
+
+      <div class="mt-2">
+        <input type="file" id="fileLeft" accept="image/png, image/jpeg" class="hidden">
+        <button id="btnLeft" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-full shadow hover:bg-blue-700 transition">
+          Add picture
+        </button>
+        <div id="fileInfoLeft" class="file-info hidden"></div>
+        <label class="flex items-center gap-2 mt-2 text-sm text-gray-600">
+          <input type="checkbox" id="onlyPic1">
+          Use only picture
+        </label>
+      </div>
     </div>
+
+    
     <div>
       <label class="block font-semibold mb-1">Right Text</label>
       <textarea id="rightText" rows="4" class="w-full border rounded p-2" placeholder="Text 2"></textarea>
       <p class="small-muted mt-1">Appears in purple-to-pink gradient</p>
+
+      <div class="mt-2">
+        <input type="file" id="fileRight" accept="image/png, image/jpeg" class="hidden">
+        <button id="btnRight" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-full shadow hover:bg-blue-700 transition">
+          Add picture
+        </button>
+        <div id="fileInfoRight" class="file-info hidden"></div>
+        <label class="flex items-center gap-2 mt-2 text-sm text-gray-600">
+          <input type="checkbox" id="onlyPic2">
+          Use only picture
+        </label>
+      </div>
     </div>
   </div>
 
-<div class="flex flex-col items-center mt-4 w-full">
-  
-  <button id="downloadBtn" class="px-6 py-2 bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition rounded-full">
-    Download Your Live Translation
-  </button>
+  <div class="flex flex-col items-center mt-4 w-full">
+    <button id="downloadBtn" class="px-6 py-2 bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition rounded-full">
+      Download Your Live Translation
+    </button>
 
-  
-  <p class="text-xs mt-2 text-center" style="color: #86868B; max-width: 500px;">
-    In case this is not abundantly clear: This site is not affiliated with Apple Inc. It's created for fun and to spread joy in life. 😊
-  </p>
-</div>
+    <p class="text-xs mt-2 text-center" style="color: #86868B; max-width: 500px;">
+      In case this is not abundantly clear: This site is not affiliated with Apple Inc. It's created for fun and to spread joy in life. 😊
+    </p>
+  </div>
+
 <script>
-
 const canvas = document.getElementById('previewCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -87,26 +122,34 @@ const leftTextEl = document.getElementById('leftText');
 const rightTextEl = document.getElementById('rightText');
 const downloadBtn = document.getElementById('downloadBtn');
 
+const fileLeft = document.getElementById('fileLeft');
+const fileRight = document.getElementById('fileRight');
+const btnLeft = document.getElementById('btnLeft');
+const btnRight = document.getElementById('btnRight');
+const fileInfoLeft = document.getElementById('fileInfoLeft');
+const fileInfoRight = document.getElementById('fileInfoRight');
+
+const onlyPic1 = document.getElementById('onlyPic1');
+const onlyPic2 = document.getElementById('onlyPic2');
 
 const earbudLeft = 317;
 const earbudRight = 678;
-
-
 const sideMargin = 20;
 const earGap = 20;
+const boxY = 140;
+const boxHeight = 420;
+const imgBoxWidth = 281;
+const imgBoxHeight = 273;
 
+let imgLeft = null;
+let imgRight = null;
 
 const baseImage = new Image();
 baseImage.crossOrigin = "anonymous";
 baseImage.src = 'def.png';
-
 baseImage.onload = () => {
-  document.fonts.load("48px 'SF Pro Display'").then(() => {
-    draw(); 
-  });
+  document.fonts.load("48px 'SF Pro Display'").then(() => draw());
 };
-
-
 
 function wrapTextToLines(text, maxWidth) {
   if (!text) return [];
@@ -135,7 +178,6 @@ function renderTextInBox(text, boxX, boxY, boxWidth, boxHeight, initialFont=48, 
   const lineHeightFactor = 1.1;
   let lines = [];
 
-  
   while (fontSize >= minFont) {
     ctx.font = `bold ${fontSize}px -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`;
     lines = wrapTextToLines(text, boxWidth);
@@ -150,15 +192,12 @@ function renderTextInBox(text, boxX, boxY, boxWidth, boxHeight, initialFont=48, 
     fontSize -= 1;
   }
 
-  
   ctx.font = `bold ${fontSize}px -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`;
   ctx.textBaseline = 'top';
   ctx.textAlign = 'center';
-  if (typeof colorOrGradient === 'function') {
-    ctx.fillStyle = colorOrGradient(boxX, boxWidth);
-  } else {
-    ctx.fillStyle = colorOrGradient;
-  }
+  ctx.fillStyle = typeof colorOrGradient === 'function'
+    ? colorOrGradient(boxX, boxWidth)
+    : colorOrGradient;
 
   const lineHeight = fontSize * lineHeightFactor;
   const startY = boxY + (boxHeight - lines.length * lineHeight) / 2;
@@ -167,6 +206,16 @@ function renderTextInBox(text, boxX, boxY, boxWidth, boxHeight, initialFont=48, 
   }
 }
 
+function drawImageContain(img, x, y, w, h) {
+  const iw = img.width;
+  const ih = img.height;
+  const scale = Math.min(w / iw, h / ih);
+  const nw = iw * scale;
+  const nh = ih * scale;
+  const dx = x + (w - nw) / 2;
+  const dy = y + (h - nh) / 2;
+  ctx.drawImage(img, dx, dy, nw, nh);
+}
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -177,19 +226,10 @@ function draw() {
     ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
   }
 
-  ctx.fillStyle = 'black';
-  ctx.font = "600 22px -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
-  ctx.textAlign = 'center';
-  ctx.fillText('', canvas.width / 2, 28);
-
   const leftBoxX = sideMargin;
   const leftBoxWidth = earbudLeft - earGap - sideMargin;
-
   const rightBoxX = earbudRight + earGap;
   const rightBoxWidth = canvas.width - sideMargin - rightBoxX;
-
-  const boxY = 140;
-  const boxHeight = 420;
 
   const leftGradientCreator = (boxX, boxW) => {
     const g = ctx.createLinearGradient(boxX, 0, boxX + boxW, 0);
@@ -197,8 +237,6 @@ function draw() {
     g.addColorStop(1, '#282828');
     return g;
   };
-
-  renderTextInBox(leftTextEl.value || 'Text 1', leftBoxX, boxY, leftBoxWidth, boxHeight, 56, leftGradientCreator);
 
   const rightGradientCreator = (boxX, boxW) => {
     const g = ctx.createLinearGradient(boxX, 0, boxX + boxW, 0);
@@ -214,12 +252,71 @@ function draw() {
     return g;
   };
 
-  renderTextInBox(rightTextEl.value || 'Text 2', rightBoxX, boxY, rightBoxWidth, boxHeight, 56, rightGradientCreator);
+  
+  if (imgLeft) {
+    drawImageContain(imgLeft, leftBoxX, boxY, imgBoxWidth, imgBoxHeight);
+    if (!onlyPic1.checked) {
+      renderTextInBox(leftTextEl.value || 'Text 1',
+        leftBoxX, boxY + imgBoxHeight + 10,
+        leftBoxWidth, boxHeight - imgBoxHeight - 10,
+        40, leftGradientCreator);
+    }
+  } else {
+    renderTextInBox(leftTextEl.value || 'Text 1',
+      leftBoxX, boxY, leftBoxWidth, boxHeight,
+      56, leftGradientCreator);
+  }
+
+  if (imgRight) {
+    drawImageContain(imgRight, rightBoxX, boxY, imgBoxWidth, imgBoxHeight);
+    if (!onlyPic2.checked) {
+      renderTextInBox(rightTextEl.value || 'Text 2',
+        rightBoxX, boxY + imgBoxHeight + 10,
+        rightBoxWidth, boxHeight - imgBoxHeight - 10,
+        40, rightGradientCreator);
+    }
+  } else {
+    renderTextInBox(rightTextEl.value || 'Text 2',
+      rightBoxX, boxY, rightBoxWidth, boxHeight,
+      56, rightGradientCreator);
+  }
 }
 
-// 🔹 обработчики нужно вынести сюда, а не держать в draw()
-leftTextEl.addEventListener('input', draw);
-rightTextEl.addEventListener('input', draw);
+function handleFile(input, side) {
+  const file = input.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    if (side === 'left') imgLeft = img;
+    if (side === 'right') imgRight = img;
+    updateFileInfo(side, file.name);
+    draw();
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+function updateFileInfo(side, name) {
+  const infoEl = side === 'left' ? fileInfoLeft : fileInfoRight;
+  infoEl.innerHTML = `${name} <span class="file-remove">✕</span>`;
+  infoEl.classList.remove('hidden');
+
+  infoEl.querySelector('.file-remove').onclick = () => {
+    if (side === 'left') imgLeft = null;
+    if (side === 'right') imgRight = null;
+    infoEl.classList.add('hidden');
+    draw();
+  };
+}
+
+btnLeft.addEventListener('click', () => fileLeft.click());
+btnRight.addEventListener('click', () => fileRight.click());
+fileLeft.addEventListener('change', () => handleFile(fileLeft, 'left'));
+fileRight.addEventListener('change', () => handleFile(fileRight, 'right'));
+
+
+[leftTextEl, rightTextEl, onlyPic1, onlyPic2].forEach(el =>
+  el.addEventListener('input', draw)
+);
 
 downloadBtn.addEventListener('click', () => {
   try {
@@ -235,7 +332,6 @@ downloadBtn.addEventListener('click', () => {
     alert('Ошибка при экспорте картинки. Используйте локальный сервер (Live Server).');
   }
 });
-
 </script>
 </body>
 </html>
