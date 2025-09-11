@@ -137,7 +137,7 @@ function renderTextInBox(text, boxX, boxY, boxWidth, boxHeight, initialFont=48, 
 
   
   while (fontSize >= minFont) {
-    ctx.font = `bold ${fontSize}px 'SF Pro Display'`;
+    ctx.font = `bold ${fontSize}px -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`;
     lines = wrapTextToLines(text, boxWidth);
     const lineHeight = fontSize * lineHeightFactor;
     const totalHeight = lines.length * lineHeight;
@@ -151,7 +151,7 @@ function renderTextInBox(text, boxX, boxY, boxWidth, boxHeight, initialFont=48, 
   }
 
   
-  ctx.font = `bold ${fontSize}px 'SF Pro Display'`;
+  ctx.font = `bold ${fontSize}px -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`;
   ctx.textBaseline = 'top';
   ctx.textAlign = 'center';
   if (typeof colorOrGradient === 'function') {
@@ -178,7 +178,7 @@ function draw() {
   }
 
   ctx.fillStyle = 'black';
-  ctx.font = "600 22px 'SF Pro Display'";
+  ctx.font = "600 22px -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
   ctx.textAlign = 'center';
   ctx.fillText('', canvas.width / 2, 28);
 
