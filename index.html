@@ -182,46 +182,44 @@ function draw() {
   ctx.textAlign = 'center';
   ctx.fillText('', canvas.width / 2, 28);
 
-const leftBoxX = sideMargin;
-const leftBoxWidth = earbudLeft - earGap - sideMargin;
+  const leftBoxX = sideMargin;
+  const leftBoxWidth = earbudLeft - earGap - sideMargin;
 
-const rightBoxX = earbudRight + earGap;
-const rightBoxWidth = canvas.width - sideMargin - rightBoxX;
+  const rightBoxX = earbudRight + earGap;
+  const rightBoxWidth = canvas.width - sideMargin - rightBoxX;
 
-const boxY = 140;
-const boxHeight = 420;
+  const boxY = 140;
+  const boxHeight = 420;
 
-const leftGradientCreator = (boxX, boxW) => {
-  const g = ctx.createLinearGradient(boxX, 0, boxX + boxW, 0);
-  g.addColorStop(0, '#d4d4d4');
-  g.addColorStop(1, '#282828');
-  return g;
-};
+  const leftGradientCreator = (boxX, boxW) => {
+    const g = ctx.createLinearGradient(boxX, 0, boxX + boxW, 0);
+    g.addColorStop(0, '#d4d4d4');
+    g.addColorStop(1, '#282828');
+    return g;
+  };
 
-renderTextInBox(leftTextEl.value || 'Text 1', leftBoxX, boxY, leftBoxWidth, boxHeight, 56, leftGradientCreator);
+  renderTextInBox(leftTextEl.value || 'Text 1', leftBoxX, boxY, leftBoxWidth, boxHeight, 56, leftGradientCreator);
 
-const rightGradientCreator = (boxX, boxW) => {
-  const g = ctx.createLinearGradient(boxX, 0, boxX + boxW, 0);
-  g.addColorStop(0.0, '#0a0762');
-  g.addColorStop(0.125, '#080d8f');
-  g.addColorStop(0.25, '#2919db');
-  g.addColorStop(0.375, '#6d22bd');
-  g.addColorStop(0.5, '#8a2cc8');
-  g.addColorStop(0.625, '#c037c3');
-  g.addColorStop(0.75, '#ef2db0');
-  g.addColorStop(0.875, '#eb277d');
-  g.addColorStop(1.0, '#fa1c65');
-  return g;
-};
+  const rightGradientCreator = (boxX, boxW) => {
+    const g = ctx.createLinearGradient(boxX, 0, boxX + boxW, 0);
+    g.addColorStop(0.0, '#0a0762');
+    g.addColorStop(0.125, '#080d8f');
+    g.addColorStop(0.25, '#2919db');
+    g.addColorStop(0.375, '#6d22bd');
+    g.addColorStop(0.5, '#8a2cc8');
+    g.addColorStop(0.625, '#c037c3');
+    g.addColorStop(0.75, '#ef2db0');
+    g.addColorStop(0.875, '#eb277d');
+    g.addColorStop(1.0, '#fa1c65');
+    return g;
+  };
 
+  renderTextInBox(rightTextEl.value || 'Text 2', rightBoxX, boxY, rightBoxWidth, boxHeight, 56, rightGradientCreator);
+}
 
-renderTextInBox(rightTextEl.value || 'Text 2', rightBoxX, boxY, rightBoxWidth, boxHeight, 56, rightGradientCreator);
-
-
-
+// 🔹 обработчики нужно вынести сюда, а не держать в draw()
 leftTextEl.addEventListener('input', draw);
 rightTextEl.addEventListener('input', draw);
-
 
 downloadBtn.addEventListener('click', () => {
   try {
@@ -237,7 +235,7 @@ downloadBtn.addEventListener('click', () => {
     alert('Ошибка при экспорте картинки. Используйте локальный сервер (Live Server).');
   }
 });
-}
+
 </script>
 </body>
 </html>
